@@ -7,7 +7,12 @@ export type NinjaTurtle = {
   weapon: string;
 };
 
-const NinjaTurtleDB = createDatabase<NinjaTurtle>();
+const NinjaTurtleDB = createDatabase<NinjaTurtle>([
+  "id",
+  "name",
+  "color",
+  "weapon",
+]);
 
 const leoId = NinjaTurtleDB.instance.set({
   name: "leo",

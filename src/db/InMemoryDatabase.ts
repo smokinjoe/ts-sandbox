@@ -19,7 +19,7 @@ export function isOfTypeT<T extends BaseRecord>(
   return keys.every((key) => key in obj);
 }
 
-export function createDatabase<T extends BaseRecord>() {
+export function createDatabase<T extends BaseRecord>(keys: (keyof T)[]) {
   class InMemoryDatabase implements Database<T> {
     private db: Record<string, T> = {};
 
@@ -31,7 +31,13 @@ export function createDatabase<T extends BaseRecord>() {
       const objectToInsert: T = {
         id,
         ...newValue,
-      } as T; // Would prefer to rely on an assertion
+      } as T;
+
+      if (keys?.length > 0 && !isOfTypeT<T>(objectToInsert, keys)) {
+        throw new Error(
+          "Could not insert object into database due to type mismatch"
+        );
+      }
 
       this.db[id] = objectToInsert;
       return id;
