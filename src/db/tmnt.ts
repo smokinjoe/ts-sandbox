@@ -1,4 +1,11 @@
-import { NinjaTurtle, createDatabase } from "./db";
+import { BaseRecord, createDatabase } from "./InMemoryDatabase";
+
+export type NinjaTurtle = {
+  id: string;
+  name: string;
+  color: string;
+  weapon: string;
+};
 
 const NinjaTurtleDB = createDatabase<NinjaTurtle>();
 
@@ -15,10 +22,11 @@ const mikeId = NinjaTurtleDB.instance.set({
 });
 
 console.log(NinjaTurtleDB.instance.get(leoId));
-console.log(NinjaTurtleDB.instance.get(mikeId));
+console.log(NinjaTurtleDB.instance.getBy("name", "mike"));
 
 /**
  * The following will fail because it doesn't match the NinjaTurtle type
+ * But no error is being thrown (yet)
  */
 const fakeId = NinjaTurtleDB.instance.set({
   name: "fake",

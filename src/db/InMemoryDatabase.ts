@@ -1,13 +1,6 @@
 import { v4 as randomUUID } from "uuid";
 
-export type NinjaTurtle = {
-  id: string;
-  name: string;
-  color: string;
-  weapon: string;
-};
-
-type BaseRecord = {
+export type BaseRecord = {
   id: string;
 };
 
@@ -16,7 +9,10 @@ interface Database<T extends BaseRecord> {
   get(id: string): T | undefined;
 }
 
-function isOfTypeT<T extends BaseRecord>(
+/**
+ * Unused because I can't figure out how to abstract the keys
+ */
+export function isOfTypeT<T extends BaseRecord>(
   obj: any,
   keys: (keyof T)[]
 ): obj is T {
@@ -35,25 +31,18 @@ export function createDatabase<T extends BaseRecord>() {
       const objectToInsert: T = {
         id,
         ...newValue,
-      } as T;
+      } as T; // Would prefer to rely on an assertion
 
-      if (
-        isOfTypeT<NinjaTurtle>(objectToInsert, [
-          "id",
-          "name",
-          "color",
-          "weapon",
-        ])
-      ) {
-        this.db[id] = objectToInsert;
-        return id;
-      }
-
-      throw new Error("Invalid object type");
+      this.db[id] = objectToInsert;
+      return id;
     }
 
     get(id: string): T | undefined {
       return this.db[id];
+    }
+
+    getBy(key: keyof T, value: any): T | undefined {
+      return Object.values(this.db).find((record) => record[key] === value);
     }
   }
 
