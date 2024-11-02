@@ -6,7 +6,9 @@ type Pokemon = {
 };
 
 type PokemonSpecies = {
+  base_experience: number;
   species: Pokemon;
+  weight: number;
 };
 
 type PokemonList = {
@@ -33,7 +35,7 @@ function makeURLFlyweights<ReturnType>(urls: Record<string, string>) {
 
 (async () => {
   const pokemon = (await (
-    await fetch("https://pokeapi.co/api/v2/pokemon/1")
+    await fetch("https://pokeapi.co/api/v2/pokemon")
   ).json()) as PokemonList;
 
   const urls = pokemon.results.reduce(
@@ -45,9 +47,8 @@ function makeURLFlyweights<ReturnType>(urls: Record<string, string>) {
   );
 
   const lookup = makeURLFlyweights<PokemonSpecies>(urls);
-  const data = await lookup.bulbasaur;
-  console.log(data.species);
-
-  const data2 = await lookup.charmander;
-  console.log(data2.species);
+  const bulbasaur = await lookup.bulbasaur;
+  console.log(bulbasaur.weight);
+  const charmander = await lookup.charmander;
+  console.log(charmander);
 })();
