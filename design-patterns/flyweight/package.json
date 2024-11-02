@@ -13,12 +13,11 @@
   "license": "ISC",
   "dependencies": {
     "node-fetch": "3.3.2",
-    "ts-node": "10.9.2",
+    "tsx": "^4.19.2",
     "typescript": "5.6.3"
   },
   "devDependencies": {
     "@types/node": "22.8.4",
-    "@types/node-fetch": "2.6.11",
-    "ts-node-dev": "2.0.0"
+    "@types/node-fetch": "2.6.11"
   }
 }
