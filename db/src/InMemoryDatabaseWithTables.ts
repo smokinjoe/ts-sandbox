@@ -1,63 +1,67 @@
-import { BaseRecord } from "./InMemoryDatabase";
+import { v4 as randomUUID } from "uuid";
 
-interface Table<TData extends BaseRecord> {
-  set(newValue: TData): void;
-  get(id: string): TData | undefined;
+export type BaseRecord = {
+  id: string;
+};
+
+interface DBTable<T extends BaseRecord> {
+  set(newValue: T): void;
+  get(id: string): T | undefined;
 }
 
-interface DatabaseWithTables {
-  tables: Record<string, Table<unknown>>;
-  getTable(name: string): Table<unknown>;
-  setTable(name: string, table: Table<unknown>): void;
-  showTables(): string[];
-  createTable<TData extends BaseRecord>(): Table<TData>;
+export function isOfTypeT<T extends BaseRecord>(
+  obj: any,
+  keys: (keyof T)[]
+): obj is T {
+  return keys.every((key) => key in obj);
 }
 
-function createTable<TData extends BaseRecord>(): Table<TData> {
-        class DBTable implements Table<TData> {
-            private dbTable: Record<string, TData> = {};
+export function createTable<T extends BaseRecord>(keys: (keyof T)[]) {
+  class InMemoryDBTable implements DBTable<T> {
+    private table: Record<string, T> = {};
 
-            set(newValue: TData): void {
-            this.dbTable[newValue.id] = newValue;
-            }
+    set(newValue: Omit<T, "id">): string {
+      const id = randomUUID();
 
-            get(id: string): TData | undefined {
-            return this.dbTable[id];
-            }
-        }
+      const objectToInsert: T = {
+        id,
+        ...newValue,
+      } as T;
 
-    
-      return new DBTable();
-}
+      if (keys?.length > 0 && !isOfTypeT<T>(objectToInsert, keys)) {
+        throw new Error(
+          "Could not insert object into database due to type mismatch"
+        );
+      }
 
-
-export function createDatabaseWithTables() {
-  class InMemoryDatabaseWithTables implements DatabaseWithTables {
-    tables: Record<string, Table<BaseRecord>> = {};
-
-    static instance: InMemoryDatabaseWithTables =
-      new InMemoryDatabaseWithTables();
-
-    getTable(name: string): Table<BaseRecord> {
-      return this.tables[name];
+      this.table[id] = objectToInsert;
+      return id;
     }
 
-    setTable(name: string, table: Table<BaseRecord>): void {
-      this.tables[name] = table;
+    get(id: string): T | undefined {
+      return this.table[id];
     }
 
-    showTables(): string[] {
-      return Object.keys(this.tables);
+    getBy(key: keyof T, value: any): T | undefined {
+      return Object.values(this.table).find((record) => record[key] === value);
     }
-
-    createTable<TData extends BaseRecord>(name: string): Table<TData> {
-        const dbTable = createTable();
-
-      this.tables[name] = dbTable;
-
-      return dbTable;
-
   }
 
-  return InMemoryDatabaseWithTables;
+  return new InMemoryDBTable();
+}
+
+export function createDatabase() {
+  class InMemoryDatabase {
+    private tables: Record<string, any> = {};
+
+    createTable<T extends BaseRecord>(name: string, keys: (keyof T)[]) {
+      this.tables[name] = createTable<T>(keys);
+    }
+
+    getTable(name: string) {
+      return this.tables[name];
+    }
+  }
+
+  return new InMemoryDatabase();
 }
