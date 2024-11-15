@@ -5,8 +5,9 @@ export type BaseRecord = {
 };
 
 interface DBTable<T extends BaseRecord> {
-  set(newValue: T): void;
+  set(newValue: Omit<T, "id">): string;
   get(id: string): T | undefined;
+  getBy(key: keyof T, value: any): T | undefined;
 }
 
 export function isOfTypeT<T extends BaseRecord>(
@@ -52,7 +53,7 @@ export function createTable<T extends BaseRecord>(keys: (keyof T)[]) {
 
 export function createDatabase() {
   class InMemoryDatabase {
-    private tables: Record<string, any> = {};
+    private tables: Record<string, DBTable<any>> = {};
 
     createTable<T extends BaseRecord>(name: string, keys: (keyof T)[]) {
       this.tables[name] = createTable<T>(keys);
