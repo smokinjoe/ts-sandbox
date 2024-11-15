@@ -7,8 +7,8 @@ export type BaseRecord = {
 interface DBTable<T extends BaseRecord> {
   set(newValue: Omit<T, "id">): string;
   get(id: string): T | undefined;
-  getBy(key: keyof T, value: any): T | undefined;
-  update: (id: string, newValue: Partial<T>) => T | undefined;
+  getBy(key: keyof T, value: T[keyof T]): T | undefined;
+  update(id: string, newValue: Partial<T>): T | undefined;
 }
 
 export function isOfTypeT<T extends BaseRecord>(
@@ -18,19 +18,17 @@ export function isOfTypeT<T extends BaseRecord>(
   return keys.every((key) => key in obj);
 }
 
-export function createTable<T extends BaseRecord>(keys: (keyof T)[]) {
+export function createTable<T extends BaseRecord>(
+  keys: (keyof T)[]
+): DBTable<T> {
   class InMemoryDBTable implements DBTable<T> {
     private table: Record<string, T> = {};
 
     set(newValue: Omit<T, "id">): string {
       const id = randomUUID();
+      const objectToInsert: T = { id, ...newValue } as T;
 
-      const objectToInsert: T = {
-        id,
-        ...newValue,
-      } as T;
-
-      if (keys?.length > 0 && !isOfTypeT<T>(objectToInsert, keys)) {
+      if (keys.length > 0 && !isOfTypeT(objectToInsert, keys)) {
         throw new Error(
           "Could not insert object into database due to type mismatch"
         );
@@ -44,7 +42,7 @@ export function createTable<T extends BaseRecord>(keys: (keyof T)[]) {
       return this.table[id];
     }
 
-    getBy(key: keyof T, value: any): T | undefined {
+    getBy(key: keyof T, value: T[keyof T]): T | undefined {
       return Object.values(this.table).find((record) => record[key] === value);
     }
 
@@ -55,12 +53,9 @@ export function createTable<T extends BaseRecord>(keys: (keyof T)[]) {
         return undefined;
       }
 
-      const updatedRecord: T = {
-        ...record,
-        ...newValue,
-      };
+      const updatedRecord: T = { ...record, ...newValue };
 
-      if (keys?.length > 0 && !isOfTypeT<T>(updatedRecord, keys)) {
+      if (keys.length > 0 && !isOfTypeT(updatedRecord, keys)) {
         throw new Error(
           "Could not update object in database due to type mismatch"
         );
@@ -74,18 +69,39 @@ export function createTable<T extends BaseRecord>(keys: (keyof T)[]) {
   return new InMemoryDBTable();
 }
 
-export function createDatabase() {
-  class InMemoryDatabase {
-    private tables: Record<string, DBTable<any>> = {};
+export class InMemoryDatabase<Tables extends Record<string, BaseRecord>> {
+  private tables: { [K in keyof Tables]?: DBTable<Tables[K]> } = {};
 
-    createTable<T extends BaseRecord>(name: string, keys: (keyof T)[]) {
-      this.tables[name] = createTable<T>(keys);
+  createTable<Name extends string, T extends BaseRecord>(
+    name: Name,
+    keys: (keyof T)[]
+  ): InMemoryDatabase<Tables & { [K in Name]: T }> {
+    if (this.tables[name as keyof Tables]) {
+      throw new Error(`Table ${name} already exists`);
     }
 
-    getTable(name: string) {
-      return this.tables[name];
-    }
+    const newTable = createTable<T>(keys);
+    (this.tables as any)[name] = newTable;
+
+    return this as unknown as InMemoryDatabase<Tables & { [K in Name]: T }>;
   }
 
-  return new InMemoryDatabase();
+  getTable<Name extends keyof Tables>(
+    name: Name
+  ): DBTable<Tables[Name]> | undefined {
+    return this.tables[name];
+  }
 }
+
+// Define specific types
+export type NinjaTurtle = BaseRecord & {
+  name: string;
+  color: string;
+  weapon: string;
+};
+
+export type Villain = BaseRecord & {
+  name: string;
+  weapon: string;
+  iq: number;
+};
