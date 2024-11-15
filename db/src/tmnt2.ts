@@ -1,3 +1,8 @@
+/**
+ * Trying to talk this through with chatGPT but it's only getting more complicated and convoluted.
+ * https://chatgpt.com/share/673793d7-5808-8013-8106-df859cb73de2
+ */
+
 import {
   InMemoryDatabase,
   NinjaTurtle,
