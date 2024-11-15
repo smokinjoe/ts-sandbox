@@ -8,6 +8,7 @@ interface DBTable<T extends BaseRecord> {
   set(newValue: Omit<T, "id">): string;
   get(id: string): T | undefined;
   getBy(key: keyof T, value: any): T | undefined;
+  update: (id: string, newValue: Partial<T>) => T | undefined;
 }
 
 export function isOfTypeT<T extends BaseRecord>(
@@ -45,6 +46,28 @@ export function createTable<T extends BaseRecord>(keys: (keyof T)[]) {
 
     getBy(key: keyof T, value: any): T | undefined {
       return Object.values(this.table).find((record) => record[key] === value);
+    }
+
+    update(id: string, newValue: Partial<T>): T | undefined {
+      const record = this.table[id];
+
+      if (!record) {
+        return undefined;
+      }
+
+      const updatedRecord: T = {
+        ...record,
+        ...newValue,
+      };
+
+      if (keys?.length > 0 && !isOfTypeT<T>(updatedRecord, keys)) {
+        throw new Error(
+          "Could not update object in database due to type mismatch"
+        );
+      }
+
+      this.table[id] = updatedRecord;
+      return updatedRecord;
     }
   }
 

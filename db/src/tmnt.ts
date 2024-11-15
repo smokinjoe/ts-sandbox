@@ -85,3 +85,7 @@ const rocksteadyId = TMNTDb.getTable("Villains").set({
 });
 
 console.log(TMNTDb.getTable("Villains"));
+
+console.log(TMNTDb.getTable("Villains").get(shredderId));
+TMNTDb.getTable("Villains").update(shredderId, { iq: 10000 });
+console.log(TMNTDb.getTable("Villains").get(shredderId));
