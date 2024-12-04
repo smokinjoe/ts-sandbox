@@ -68,7 +68,7 @@ const getNewRelicLogger = (client: NewRelicClient) => {
     errorWithMessage: (error: Error, extraMessage: string) => {
       const event = logParser("error", error);
       client.noticeError(event.error ?? event.message, {
-        casinoErrorMessage: extraMessage,
+        errorMessage: extraMessage,
       });
     },
     debug: (_: string | Error) => {
